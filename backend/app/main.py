@@ -3,9 +3,8 @@
 from fastapi import FastAPI, File, UploadFile
 from app.validation import check_pdf
 from app.pdf_parser import PdfError, extract_text
-from app.llm import analyse_document
+from app.llm import analyse_document, consolidate
 
-# this creates the web service
 app = FastAPI(
     title="Multi-Doc Insight Engine",
     description="Analyses uploaded PDFs and returns key details and a consolidated summary.",
@@ -46,4 +45,17 @@ async def analyze(files: list[UploadFile] = File(...)) -> dict:
                 "pages": pages,
                 "details": details,
             })
-    return {"documents": results}
+    good = [
+        {"filename": r["filename"], **r["details"].model_dump()}
+        for r in results
+        if r["status"] == "ok"
+    ]
+
+    consolidated = None
+    if good:
+        try:
+            consolidated = consolidate(good)
+        except Exception:
+            consolidated = None  
+
+    return {"documents": results, "consolidated": consolidated}
