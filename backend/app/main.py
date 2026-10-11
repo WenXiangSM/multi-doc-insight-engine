@@ -3,6 +3,7 @@
 from fastapi import FastAPI, File, UploadFile
 from app.validation import check_pdf
 from app.pdf_parser import PdfError, extract_text
+from app.llm import analyse_document
 
 # this creates the web service
 app = FastAPI(
@@ -19,23 +20,30 @@ def health() -> dict:
 
 @app.post("/api/analyze")
 async def analyze(files: list[UploadFile] = File(...)) -> dict:
-    """Accept one or more files and validate each one."""
+    """Accept one or more PDFs and return key details for each."""
     results = []
     for file in files:
         content = await file.read()
         error = check_pdf(file.filename or "", content)
-        if not error: 
-            try: 
+
+        if not error:
+            try:
                 text, pages = extract_text(content)
-            except PdfError as exc: 
+                details = analyse_document(content)
+                if details is None:
+                    raise ValueError("Empty response from the model")
+            except PdfError as exc:
                 error = str(exc)
+            except Exception:
+                error = "The AI service could not analyse this document. Please try again."
+
         if error:
             results.append({"filename": file.filename, "status": "error", "error": error})
         else:
             results.append({
                 "filename": file.filename,
-                "status": "ok", 
-                "pages": pages, 
-                "preview": text[:300],
+                "status": "ok",
+                "pages": pages,
+                "details": details,
             })
     return {"documents": results}
