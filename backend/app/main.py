@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, File, UploadFile
 from app.validation import check_pdf
+from app.pdf_parser import PdfError, extract_text
 
 # this creates the web service
 app = FastAPI(
@@ -23,8 +24,18 @@ async def analyze(files: list[UploadFile] = File(...)) -> dict:
     for file in files:
         content = await file.read()
         error = check_pdf(file.filename or "", content)
+        if not error: 
+            try: 
+                text, pages = extract_text(content)
+            except PdfError as exc: 
+                error = str(exc)
         if error:
             results.append({"filename": file.filename, "status": "error", "error": error})
         else:
-            results.append({"filename": file.filename, "status": "ok", "size_bytes": len(content)})
+            results.append({
+                "filename": file.filename,
+                "status": "ok", 
+                "pages": pages, 
+                "preview": text[:300],
+            })
     return {"documents": results}
