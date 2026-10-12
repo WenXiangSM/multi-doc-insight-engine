@@ -5,6 +5,7 @@ from app.validation import check_pdf
 from app.pdf_parser import PdfError, extract_text
 from app.llm import analyse_document, answer_question, consolidate
 from app.safety import find_injection
+import json
 
 app = FastAPI(
     title="Multi-Doc Insight Engine",
@@ -68,17 +69,31 @@ async def analyze(files: list[UploadFile] = File(...)) -> dict:
     return {"documents": results, "consolidated": consolidated}
 
 
+
 MAX_QUESTION_LENGTH = 500
+MAX_HISTORY_TURNS = 5
 
 
 @app.post("/api/ask")
-async def ask(question: str = Form(""), files: list[UploadFile] = File(...)) -> dict:
+async def ask(
+    question: str = Form(""),
+    history: str = Form("[]"),
+    files: list[UploadFile] = File(...),
+) -> dict:
     """Answer a question using only the uploaded PDFs."""
     question = question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Please type a question.")
     if len(question) > MAX_QUESTION_LENGTH:
         raise HTTPException(status_code=400, detail="Question is too long (500 characters maximum).")
+
+    try:
+        turns = [
+            {"question": str(t["question"])[:500], "answer": str(t["answer"])[:2000]}
+            for t in json.loads(history)[-MAX_HISTORY_TURNS:]
+        ]
+    except (ValueError, TypeError, KeyError):
+        turns = []  
 
     documents = []
     for file in files:
@@ -95,7 +110,7 @@ async def ask(question: str = Form(""), files: list[UploadFile] = File(...)) -> 
         raise HTTPException(status_code=400, detail="No readable PDF to answer from.")
 
     try:
-        answer = answer_question(question, documents)
+        answer = answer_question(question, documents, turns)
         if answer is None:
             raise ValueError("Empty response from the model")
     except Exception:

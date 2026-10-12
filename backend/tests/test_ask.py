@@ -18,7 +18,7 @@ def make_pdf(text: str) -> bytes:
 def fake_gemini(monkeypatch):
     """Before every test, swap the real Gemini call for a fake with a fixed answer."""
 
-    def fake_answer(question, documents):
+    def fake_answer(question, documents, history):
         return Answer(answer="Fake answer", sources=["report.pdf"], found_in_documents=True)
 
     monkeypatch.setattr(main, "answer_question", fake_answer)
@@ -45,3 +45,10 @@ def test_question_without_readable_pdf_is_rejected():
     response = client.post("/api/ask", data={"question": "What is this about?"}, files=files)
 
     assert response.status_code == 400
+
+def test_unreadable_history_is_ignored():
+    files = [("files", ("report.pdf", make_pdf("A normal report"), "application/pdf"))]
+    data = {"question": "What is this about?", "history": "this is not JSON"}
+    response = client.post("/api/ask", data=data, files=files)
+
+    assert response.status_code == 200

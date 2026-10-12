@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import Sidebar from './Sidebar'
 import Results from './Results'
+import AskBox from './AskBox'
 
 function App() {
-  const [files, setFiles] = useState([])         
-  const [result, setResult] = useState(null)    
-  const [loading, setLoading] = useState(false)  
-  const [error, setError] = useState('')         
+  const [files, setFiles] = useState([]) // PDFs listed in the sidebar
+  const [analysed, setAnalysed] = useState({ id: 0, files: [] }) // PDFs behind the current results
+  const [result, setResult] = useState(null) // the backend's answer
+  const [loading, setLoading] = useState(false) // true while waiting
+  const [error, setError] = useState('') // message if the whole request fails
 
-  async function handleUpload() {
+  async function handleAnalyse() {
     setLoading(true)
     setError('')
     setResult(null)
@@ -21,29 +24,63 @@ function App() {
         throw new Error('Server error')
       }
       setResult(await response.json())
+      // Remember which files these results belong to, so the chat asks about the same ones.
+      setAnalysed((previous) => ({ id: previous.id + 1, files }))
     } catch {
-      setError('Could not analyse the documents. Check the server is running and try again.')
+      setError('The documents could not be analysed. Check that the server is running, then try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div>
-      <h1>Multi-Doc Insight Engine</h1>
-      <input
-        type="file"
-        accept="application/pdf"
-        multiple
-        onChange={(e) => setFiles([...e.target.files])}
-      />
-      <button onClick={handleUpload} disabled={files.length === 0 || loading}>
-        {loading ? 'Analysing…' : 'Analyse'}
-      </button>
+  function showDocument(index) {
+    const section = document.getElementById(`doc-${index}`)
+    if (section) {
+      section.open = true
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
-      {loading && <p>Analysing {files.length} document(s). This can take up to a minute.</p>}
-      {error && <p role="alert">{error}</p>}
-      {result && <Results result={result} />}    </div>
+  const outcomes = result && files === analysed.files ? result.documents : null
+  const hasReadableDocument = result?.documents.some((doc) => doc.status === 'ok')
+
+  return (
+    <div className="layout">
+      <Sidebar
+        files={files}
+        onChange={setFiles}
+        onAnalyse={handleAnalyse}
+        onSelect={showDocument}
+        outcomes={outcomes}
+        loading={loading}
+      />
+
+      <main className="main">
+        <div className="column">
+          {!result && !loading && !error && (
+            <div className="welcome">
+              <h2>What do these documents say?</h2>
+              <p>
+                Add the PDFs you were sent, then analyse them. You get one summary across all of
+                them, the key details of each, and a chat to ask follow-up questions.
+              </p>
+            </div>
+          )}
+
+          {loading && (
+            <p className="status" role="status">
+              <span className="spinner" aria-hidden="true" />
+              Reading {files.length === 1 ? 'the document' : `${files.length} documents`}. This
+              usually takes under a minute.
+            </p>
+          )}
+
+          {error && <p role="alert">{error}</p>}
+          {result && <Results result={result} />}
+          {hasReadableDocument && <AskBox key={analysed.id} files={analysed.files} />}
+        </div>
+      </main>
+    </div>
   )
 }
 
