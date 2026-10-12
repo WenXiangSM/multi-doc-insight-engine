@@ -35,6 +35,7 @@ function Results({ result }) {
             <p role="alert">Could not analyse this file: {doc.error}</p>
           ) : (
             <>
+              {doc.warning && <p role="alert">{doc.warning}</p>}
               <p>
                 <strong>{doc.details.title}</strong> ({doc.pages} pages)
               </p>

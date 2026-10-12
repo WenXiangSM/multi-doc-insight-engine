@@ -4,6 +4,7 @@ from fastapi import FastAPI, File, UploadFile
 from app.validation import check_pdf
 from app.pdf_parser import PdfError, extract_text
 from app.llm import analyse_document, consolidate
+from app.safety import find_injection
 
 app = FastAPI(
     title="Multi-Doc Insight Engine",
@@ -28,6 +29,7 @@ async def analyze(files: list[UploadFile] = File(...)) -> dict:
         if not error:
             try:
                 text, pages = extract_text(content)
+                suspicious = find_injection(text)
                 details = analyse_document(content)
                 if details is None:
                     raise ValueError("Empty response from the model")
@@ -44,6 +46,11 @@ async def analyze(files: list[UploadFile] = File(...)) -> dict:
                 "status": "ok",
                 "pages": pages,
                 "details": details,
+                  "warning": (
+                    "This document contains text that looks like instructions to an AI. "
+                    "Treat the results with caution."
+                    if suspicious else None
+                ),
             })
     good = [
         {"filename": r["filename"], **r["details"].model_dump()}
