@@ -1,10 +1,15 @@
 
 function BulletList({ title, items }) {
+  const visible = items.filter((item) => item.trim() !== '')
+  if (visible.length === 0) {
+    return null
+  }
+
   return (
     <>
       <h4>{title}</h4>
       <ul>
-        {items.map((item, i) => (
+        {visible.map((item, i) => (
           <li key={i}>{item}</li>
         ))}
       </ul>
