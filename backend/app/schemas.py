@@ -15,3 +15,10 @@ class ConsolidatedReport(BaseModel):
     common_themes: list[str]
     key_differences: list[str]
     key_takeaways: list[str]
+
+
+class Answer(BaseModel):
+    answer: str 
+    sources: list[str]
+    found_in_documents: bool 
+    

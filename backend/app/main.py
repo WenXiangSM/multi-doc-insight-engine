@@ -1,9 +1,9 @@
 """Entry point for the Multi-Doc Insight Engine backend API."""
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from app.validation import check_pdf
 from app.pdf_parser import PdfError, extract_text
-from app.llm import analyse_document, consolidate
+from app.llm import analyse_document, answer_question, consolidate
 from app.safety import find_injection
 
 app = FastAPI(
@@ -66,3 +66,39 @@ async def analyze(files: list[UploadFile] = File(...)) -> dict:
             consolidated = None  
 
     return {"documents": results, "consolidated": consolidated}
+
+
+MAX_QUESTION_LENGTH = 500
+
+
+@app.post("/api/ask")
+async def ask(question: str = Form(""), files: list[UploadFile] = File(...)) -> dict:
+    """Answer a question using only the uploaded PDFs."""
+    question = question.strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Please type a question.")
+    if len(question) > MAX_QUESTION_LENGTH:
+        raise HTTPException(status_code=400, detail="Question is too long (500 characters maximum).")
+
+    documents = []
+    for file in files:
+        content = await file.read()
+        if check_pdf(file.filename or "", content):
+            continue
+        try:
+            extract_text(content)
+        except PdfError:
+            continue
+        documents.append((file.filename, content))
+
+    if not documents:
+        raise HTTPException(status_code=400, detail="No readable PDF to answer from.")
+
+    try:
+        answer = answer_question(question, documents)
+        if answer is None:
+            raise ValueError("Empty response from the model")
+    except Exception:
+        raise HTTPException(status_code=502, detail="The AI service could not answer. Please try again.")
+
+    return {"answer": answer}
