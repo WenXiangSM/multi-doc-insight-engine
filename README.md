@@ -129,23 +129,25 @@ The tests replace Gemini with a fake, so they need no API key and no network.
 
 ## 4. Screenshots
 
-<!-- Replace each placeholder with the real image in docs/screenshots/ -->
-
 **Summary across documents, with page references**
 
 ![Summary](docs/screenshots/summary.png)
 
-**Key details of one document**
+**Key details of each document**
 
-![Document details](docs/screenshots/document.png)
+![Scam brief details](docs/screenshots/document-1.png)
+
+![HTX case study details. Entities such as AI Verify Foundation appear only as logos in the PDF and were read from the images.](docs/screenshots/document-2.png)
 
 **Ask the documents, with sources**
 
 ![Chat](docs/screenshots/chat.png)
 
-**Error states: invalid files rejected, one good file still analysed**
+**Error states: invalid files rejected, flagged document warned, one good file still analysed**
 
-![Error states](docs/screenshots/errors.png)
+![Error states](docs/screenshots/errors-1.png)
+
+![Error states, continued](docs/screenshots/errors-2.png)
 
 **Processing state**
 
@@ -251,8 +253,6 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push: bac
 
 - *Annual Scam and Cybercrime Brief 2025*, Singapore Police Force (40 pages, text with charts)
 - *HTX x Knovel: Productivity Co-pilot case study*, Global AI Assurance Pilot (6 pages, infographic layout with logos)
-
-<!-- If you link instead of including: give the URLs here and remove the files from samples/documents/ -->
 
 `samples/error-cases/` contains files for exercising the error handling: a text file, an empty PDF, a fake PDF, a corrupted PDF, a password-protected PDF (password `hunter2`) and the injection test PDF. The 21 MB oversized file is not committed; create it with:
 
