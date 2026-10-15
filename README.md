@@ -39,25 +39,7 @@ Built for the HTX AI Software Engineer technical test.
 
 ## 2. Architecture
 
-```mermaid
-flowchart TB
-    UI["React frontend<br/>upload, results, chat"]
-
-    subgraph API["FastAPI backend"]
-        direction TB
-        V["Validate<br/>type, size, PDF header"]
-        P["Parse<br/>PyMuPDF: readable? pages, text"]
-        S["Safety scan<br/>prompt-injection phrases"]
-        L["LLM pipeline<br/>per-document details, then consolidation"]
-        V --> P --> S --> L
-    end
-
-    G[("Gemini API<br/>reads PDF text and images,<br/>returns JSON to a fixed schema")]
-
-    UI -- "POST /api/analyze (PDFs)<br/>POST /api/ask (question, history, PDFs)" --> V
-    L <--> G
-    L -- "key details, consolidated report,<br/>answers with page references" --> UI
-```
+![Architecture](docs/architecture.png)
 
 **Request flow for `/api/analyze`**
 
@@ -170,7 +152,12 @@ The tests replace Gemini with a fake, so they need no API key and no network.
 
 **Chat state lives in the browser.** The conversation is kept client-side and the last five turns are sent with each question. The server stores nothing, so there is no database and no retained user data.
 
-**Prompt refinements from testing.** Output was checked against the source PDFs. Three issues were found and addressed in the prompts: added judgements ("successfully"), lost qualifiers ("may be liable" became "mandatory"), and consolidations that repeated every notable point. A loosely worded question that initially returned "not found" now returns the closest answer the documents support, with a note on how the question was understood.
+***Prompt refinements from testing.** The app's output was compared against the source PDFs by hand. Four problems were found and fixed in the prompts:
+
+- *Added judgements.* The HTX case study was summarised as "HTX successfully tested...", but the PDF never calls the test a success. The prompt now forbids judgements the document does not state.
+- *Lost qualifiers.* The scam brief says mules "may be liable" for caning; the summary said "mandatory". The prompt now requires qualifiers to be kept exactly as written.
+- *Summaries that repeated everything.* Early consolidated reports listed every notable point from every document (25 bullets for two PDFs). Takeaways are now capped at five, and the prompt says not to repeat points.
+- *Over-strict answers.* "What caused the biggest scam?" returned "not found" because the PDF gives figures, not causes. The prompt now answers the closest question the documents support and says how the question was understood.
 
 ## 6. Optional feature: ask the documents
 
