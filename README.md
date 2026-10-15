@@ -278,6 +278,3 @@ docker-compose.yml
 .github/workflows/ci.yml
 ```
 
-## Development notes
-
-AI-assisted development tools were used during this assignment, as permitted by the brief. All design decisions, prompts, tests and the trade-offs documented above were made and verified by me, and the output was checked against the source documents by hand.
