@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { openPdf } from './openPdf'
 
 // Turns a size in bytes into something readable, like "2.6 MB".
 function formatSize(bytes) {
@@ -8,6 +9,7 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+// A short note describing how a file's analysis went.
 function outcomeLabel(outcome) {
   if (outcome.status === 'error') {
     return { text: 'Not read', problem: true }
@@ -18,10 +20,12 @@ function outcomeLabel(outcome) {
   return { text: `${outcome.pages} ${outcome.pages === 1 ? 'page' : 'pages'}`, problem: false }
 }
 
-function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
+// The left panel: add PDFs, review the list, and start the analysis.
+function Sidebar({ files, onChange, onAnalyse, outcomes, loading }) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
 
+  // Append newly chosen or dropped files to the list.
   function addFiles(newFiles) {
     // Skip a file that is already in the list (same name and size).
     const fresh = [...newFiles].filter(
@@ -32,6 +36,7 @@ function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
     }
   }
 
+  // Accept files dropped on the dropzone, unless an analysis is running.
   function handleDrop(event) {
     event.preventDefault()
     setDragging(false)
@@ -40,6 +45,7 @@ function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
     }
   }
 
+  // The button text reflects how many files are listed and whether work is in progress.
   let analyseLabel = 'Analyse documents'
   if (loading) {
     analyseLabel = 'Analysing…'
@@ -53,6 +59,7 @@ function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
     <aside className="sidebar">
       <h1>Multi-Doc Insight Engine</h1>
 
+      {/* Dropzone: drag PDFs here or use the hidden file input. */}
       <div
         className={dragging ? 'dropzone dropzone-active' : 'dropzone'}
         onDragOver={(event) => {
@@ -62,6 +69,9 @@ function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
       >
+        <svg className="drop-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+        </svg>
         <p>Drop PDFs here</p>
         <button type="button" onClick={() => inputRef.current.click()} disabled={loading}>
           Choose files
@@ -80,25 +90,26 @@ function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
         <p className="hint">Up to 20 MB each</p>
       </div>
 
+      {/* The listed files, each with its size or its analysis outcome. */}
       {files.length > 0 && (
         <ul className="file-list">
           {files.map((file, index) => {
             const outcome = outcomes ? outcomeLabel(outcomes[index]) : null
             return (
               <li key={`${file.name}-${file.size}`}>
-                {outcome ? (
-                  <button type="button" className="file-name file-link" onClick={() => onSelect(index)}>
-                    {file.name}
-                  </button>
-                ) : (
-                  <span className="file-name">{file.name}</span>
-                )}
+                {/* The filename opens the PDF in a new tab. */}
+                <button
+                  type="button"
+                  className="file-name"
+                  onClick={() => openPdf(file)}
+                  title="Open this PDF in a new tab"
+                >
+                  {file.name}
+                </button>
                 <span className="file-meta">
-                  {outcome ? (
-                    <span className={outcome.problem ? 'outcome-problem' : undefined}>{outcome.text}</span>
-                  ) : (
-                    formatSize(file.size)
-                  )}
+                  <span className={outcome?.problem ? 'outcome-problem' : undefined}>
+                    {outcome ? outcome.text : formatSize(file.size)}
+                  </span>
                   <button
                     type="button"
                     className="link"
@@ -115,6 +126,7 @@ function Sidebar({ files, onChange, onAnalyse, onSelect, outcomes, loading }) {
         </ul>
       )}
 
+      {/* Starts the analysis. Disabled while the list is empty or work is in progress. */}
       <button className="primary analyse" onClick={onAnalyse} disabled={files.length === 0 || loading}>
         {analyseLabel}
       </button>

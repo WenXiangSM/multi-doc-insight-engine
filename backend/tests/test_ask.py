@@ -19,8 +19,7 @@ def fake_gemini(monkeypatch):
     """Before every test, swap the real Gemini call for a fake with a fixed answer."""
 
     def fake_answer(question, documents, history):
-        return Answer(answer="Fake answer", sources=["report.pdf"], found_in_documents=True)
-
+        return Answer(answer="Fake answer", sources=["report.pdf"], pages=[1], found_in_documents=True)
     monkeypatch.setattr(main, "answer_question", fake_answer)
 
 

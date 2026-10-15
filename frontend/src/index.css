@@ -1,15 +1,16 @@
+/* Global styles for the Multi-Doc Insight Engine.
+   Layout: a sidebar for the documents, a centred reading column for the
+   summary, and a chat panel with its question box pinned to the bottom. */
 
 :root {
-  --page: #ffffff; 
-  --panel: #f5f6f8; 
-  --ink: #17202f; 
-  --muted: #5d6677;
-  --rule: #dde1e8; 
-  --highlighter: #ffe45c; 
-  --alert: #a3261c; 
+  --page: #ffffff; /* main reading area */
+  --panel: #f5f6f8; /* sidebar and soft surfaces */
+  --ink: #17202f; /* main text and primary buttons */
+  --muted: #5d6677; /* secondary text */
+  --rule: #dde1e8; /* borders and dividers */
+  --focus: #ffe45c; /* keyboard focus ring */
+  --alert: #a3261c; /* errors and warnings */
   --alert-wash: #fdf0ee;
-  --good: #1f6f43;
-  --warn: #8a5a00;
 
   font-family: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 16px;
@@ -30,6 +31,7 @@ p {
   margin: 0 0 12px;
 }
 
+/* ---------- Page layout ---------- */
 
 .layout {
   display: grid;
@@ -41,27 +43,6 @@ p {
 @media (min-width: 1200px) {
   .layout:has(.chat-panel) {
     grid-template-columns: 280px minmax(0, 1fr) 380px;
-  }
-}
-
-.chat-panel {
-  display: flex;
-  flex-direction: column;
-  padding: 24px 20px 0;
-  border-left: 1px solid var(--rule);
-}
-
-.chat-panel h2 {
-  font-size: 1.125rem;
-  margin-bottom: 12px;
-}
-
-@media (min-width: 1200px) {
-  .chat-panel {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
   }
 }
 
@@ -94,6 +75,40 @@ p {
   padding: 40px 24px 0;
 }
 
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px 0;
+  border-left: 1px solid var(--rule);
+}
+
+.chat-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+}
+
+.chat-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+@media (min-width: 1200px) {
+  .chat-panel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+/* ---------- Type ---------- */
 
 h1 {
   font-size: 1.0625rem;
@@ -120,6 +135,16 @@ h4 {
   margin: 24px 0 8px;
 }
 
+.lead {
+  font-size: 1.1875rem;
+  line-height: 1.6;
+}
+
+.inline-list {
+  max-width: 68ch;
+}
+
+/* ---------- Buttons ---------- */
 
 button {
   font: inherit;
@@ -156,10 +181,11 @@ button:disabled {
 button:focus-visible,
 input:focus-visible,
 summary:focus-visible {
-  outline: 3px solid var(--highlighter);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
+/* ---------- Sidebar: upload and file list ---------- */
 
 .dropzone {
   padding: 18px 14px;
@@ -167,6 +193,22 @@ summary:focus-visible {
   border-radius: 10px;
   background: var(--page);
   text-align: center;
+}
+
+.dropzone-active {
+  border-color: var(--ink);
+  background: #fffbe0;
+}
+
+.drop-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 6px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .dropzone p {
@@ -181,11 +223,6 @@ summary:focus-visible {
   color: var(--muted);
 }
 
-.dropzone-active {
-  border-color: var(--ink);
-  background: #fffbe0;
-}
-
 .file-list {
   list-style: none;
   margin: 0;
@@ -193,30 +230,33 @@ summary:focus-visible {
 }
 
 .file-list li {
-  padding: 10px 2px;
+  padding: 10px 2px 8px;
   border-bottom: 1px solid var(--rule);
 }
 
+/* The filename is a link that opens the PDF in a new tab. */
 .file-name {
   display: block;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
-button.file-link {
   width: 100%;
   padding: 0;
   border: none;
   background: none;
   text-align: left;
-}
-
-button.file-link:hover {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
   text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
 }
 
+.file-name:hover {
+  text-decoration-color: #1d4ed8;
+}
+
+/* Size or outcome on the left, Remove at the far right. */
 .file-meta {
   display: flex;
   justify-content: space-between;
@@ -226,17 +266,17 @@ button.file-link:hover {
   color: var(--muted);
 }
 
-
-.analyse {
-  margin-top: auto; 
-  padding: 11px 16px;
-}
-
 .outcome-problem {
   font-weight: 700;
   color: var(--ink);
 }
 
+.analyse {
+  margin-top: auto; /* keeps the button at the bottom of the sidebar */
+  padding: 11px 16px;
+}
+
+/* ---------- Main area: empty, loading and error states ---------- */
 
 .welcome {
   margin: auto 0;
@@ -276,7 +316,6 @@ button.file-link:hover {
   }
 }
 
-
 [role='alert'] {
   padding: 10px 14px;
   border-radius: 8px;
@@ -284,14 +323,10 @@ button.file-link:hover {
   color: var(--alert);
 }
 
+/* ---------- Summary and documents ---------- */
 
 .report {
   margin-bottom: 40px;
-}
-
-.lead {
-  font-size: 1.1875rem;
-  line-height: 1.6;
 }
 
 .report ul,
@@ -317,7 +352,27 @@ button.file-link:hover {
   font-weight: 700;
 }
 
-/* ---------- Each document ---------- */
+/* Page reference after a point: a small round marker that opens the PDF at that page. */
+.page-link {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 9px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--page);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink);
+  vertical-align: middle;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.page-link:hover {
+  font-weight: 600;
+  border-color: var(--ink);
+  color: var(--ink);
+}
 
 .documents {
   margin-bottom: 32px;
@@ -384,10 +439,6 @@ button.file-link:hover {
 .document-failed .document-name {
   margin-bottom: 8px;
 }
-.inline-list {
-  max-width: 68ch;
-}
-
 
 /* ---------- Chat ---------- */
 
@@ -401,6 +452,7 @@ button.file-link:hover {
   margin-bottom: 28px;
 }
 
+/* The analyst's question sits on the right in a soft bubble. */
 .bubble {
   justify-self: end;
   max-width: 80%;
@@ -411,6 +463,7 @@ button.file-link:hover {
   overflow-wrap: anywhere;
 }
 
+/* The answer is plain text, like the summary. */
 .reply {
   margin: 0;
 }
@@ -435,7 +488,7 @@ button.file-link:hover {
   scroll-margin-bottom: 120px;
 }
 
-/* The question box stays at the bottom of the screen. */
+/* The question box stays at the bottom of its panel. */
 .composer {
   position: sticky;
   bottom: 0;

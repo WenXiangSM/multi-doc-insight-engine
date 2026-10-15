@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import main
-from app.schemas import ConsolidatedReport, KeyDetails
+from app.schemas import ConsolidatedReport, KeyDetails, Point
 
 client = TestClient(main.app)
 
@@ -25,7 +25,7 @@ def fake_gemini(monkeypatch):
             summary="Fake summary",
             main_topics=["topic"],
             key_entities=["entity"],
-            notable_points=["point"],
+            notable_points=[Point(text="point", page=1)],
         )
 
     def fake_consolidate(documents):

@@ -2,6 +2,7 @@
 
 import re
 
+# Phrases that typically mark an attempt to redirect the model. Matched case-insensitively.
 SUSPICIOUS_PATTERNS = [
     r"ignore (all |any )?(the )?(previous|prior|above) instructions",
     r"disregard (all |any )?(the )?(previous|prior|above) instructions",
@@ -12,6 +13,7 @@ SUSPICIOUS_PATTERNS = [
 
 
 def find_injection(text: str) -> list[str]:
+    """Return the suspicious phrases found in the text, or an empty list."""
     text = " ".join(text.split())  # tidy up line breaks and extra spaces
     found = []
     for pattern in SUSPICIOUS_PATTERNS:
