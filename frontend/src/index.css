@@ -33,8 +33,36 @@ p {
 
 .layout {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
+}
+
+/* Wide screens: the chat gets its own column on the right. */
+@media (min-width: 1200px) {
+  .layout:has(.chat-panel) {
+    grid-template-columns: 280px minmax(0, 1fr) 380px;
+  }
+}
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px 0;
+  border-left: 1px solid var(--rule);
+}
+
+.chat-panel h2 {
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 1200px) {
+  .chat-panel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
 }
 
 .sidebar {
@@ -285,10 +313,8 @@ button.file-link:hover {
   margin-bottom: 10px;
 }
 
-.takeaways span {
-  background: linear-gradient(transparent 58%, var(--highlighter) 58%);
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+.takeaways strong {
+  font-weight: 700;
 }
 
 /* ---------- Each document ---------- */
@@ -358,24 +384,9 @@ button.file-link:hover {
 .document-failed .document-name {
   margin-bottom: 8px;
 }
-
-ul.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 8px;
-  list-style: none;
-  padding: 0;
+.inline-list {
+  max-width: 68ch;
 }
-
-ul.tags li {
-  margin: 0;
-  padding: 3px 10px;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  background: var(--page);
-  font-size: 0.875rem;
-}
-
 
 
 /* ---------- Chat ---------- */
@@ -428,6 +439,7 @@ ul.tags li {
 .composer {
   position: sticky;
   bottom: 0;
+  margin-top: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;

@@ -22,19 +22,24 @@ function App() {
       const response = await fetch('/api/analyze', { method: 'POST', body: formData })
       const body = await response.json()
       if (!response.ok) {
+        // Show the backend's own message when it sent one, such as the 10-file limit.
         throw new Error(typeof body.detail === 'string' ? body.detail : 'Server error')
       }
       setResult(body)
+      // Remember which files these results belong to, so the chat asks about the same ones.
       setAnalysed((previous) => ({ id: previous.id + 1, files }))
-        } catch (err) {
-      setError(err.message === 'Server error' || err.message === 'Failed to fetch'
-        ? 'The documents could not be analysed. Check that the server is running, then try again.'
-        : err.message)
+    } catch (err) {
+      setError(
+        err.message === 'Server error' || err.message === 'Failed to fetch'
+          ? 'The documents could not be analysed. Check that the server is running, then try again.'
+          : err.message,
+      )
     } finally {
       setLoading(false)
     }
   }
 
+  // Clicking a file in the sidebar opens its section and scrolls to it.
   function showDocument(index) {
     const section = document.getElementById(`doc-${index}`)
     if (section) {
@@ -43,6 +48,7 @@ function App() {
     }
   }
 
+  // Only show result marks in the sidebar while the list still matches what was analysed.
   const outcomes = result && files === analysed.files ? result.documents : null
   const hasReadableDocument = result?.documents.some((doc) => doc.status === 'ok')
 
@@ -79,9 +85,16 @@ function App() {
 
           {error && <p role="alert">{error}</p>}
           {result && <Results result={result} />}
-          {hasReadableDocument && <AskBox key={analysed.id} files={analysed.files} />}
         </div>
       </main>
+
+      {/* The chat sits in its own panel. A new analysis (new id) starts a fresh chat. */}
+      {hasReadableDocument && (
+        <aside className="chat-panel">
+          <h2>Ask the documents</h2>
+          <AskBox key={analysed.id} files={analysed.files} />
+        </aside>
+      )}
     </div>
   )
 }

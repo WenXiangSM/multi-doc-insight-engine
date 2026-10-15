@@ -3,6 +3,14 @@ function clean(items) {
   return items.filter((item) => item.trim() !== '')
 }
 
+// Wraps numbers, percentages and money in <strong> so they stand out.
+function emphasiseFigures(text) {
+  const parts = text.split(/(\$?\d[\d,.]*%?(?:\s?(?:million|billion))?)/g)
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
+  )
+}
+
 function BulletList({ title, items, highlight = false }) {
   const visible = clean(items)
   if (visible.length === 0) {
@@ -13,7 +21,7 @@ function BulletList({ title, items, highlight = false }) {
       <h4>{title}</h4>
       <ul className={highlight ? 'takeaways' : undefined}>
         {visible.map((item, i) => (
-          <li key={i}>{highlight ? <span>{item}</span> : item}</li>
+          <li key={i}>{highlight ? <span>{emphasiseFigures(item)}</span> : item}</li>
         ))}
       </ul>
     </>
@@ -28,11 +36,7 @@ function TagList({ title, items }) {
   return (
     <>
       <h4>{title}</h4>
-      <ul className="tags">
-        {visible.map((item, i) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
+      <p className="inline-list">{visible.join(', ')}</p>
     </>
   )
 }
