@@ -40,26 +40,23 @@ Built for the HTX AI Software Engineer technical test.
 ## 2. Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Browser
-        UI[React frontend]
+flowchart TB
+    UI["React frontend<br/>upload, results, chat"]
+
+    subgraph API["FastAPI backend"]
+        direction TB
+        V["Validate<br/>type, size, PDF header"]
+        P["Parse<br/>PyMuPDF: readable? pages, text"]
+        S["Safety scan<br/>prompt-injection phrases"]
+        L["LLM pipeline<br/>per-document details, then consolidation"]
+        V --> P --> S --> L
     end
 
-    subgraph Backend["FastAPI backend"]
-        V[Validation<br/>type, size, header]
-        P[PDF parser<br/>PyMuPDF]
-        S[Safety scan<br/>prompt-injection phrases]
-        L[LLM pipeline]
-    end
+    G[("Gemini API<br/>reads PDF text and images,<br/>returns JSON to a fixed schema")]
 
-    G[(Gemini API)]
-
-    UI -->|"POST /api/analyze (PDFs)"| V --> P --> S --> L
-    L -->|"one call per PDF: key details"| G
-    L -->|"one call: consolidated report"| G
-    G --> L
-    L -->|"documents + consolidated"| UI
-    UI -->|"POST /api/ask (question, history, PDFs)"| L
+    UI -- "POST /api/analyze (PDFs)<br/>POST /api/ask (question, history, PDFs)" --> V
+    L <--> G
+    L -- "key details, consolidated report,<br/>answers with page references" --> UI
 ```
 
 **Request flow for `/api/analyze`**
