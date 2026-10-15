@@ -20,14 +20,16 @@ function App() {
         formData.append('files', file)
       }
       const response = await fetch('/api/analyze', { method: 'POST', body: formData })
+      const body = await response.json()
       if (!response.ok) {
-        throw new Error('Server error')
+        throw new Error(typeof body.detail === 'string' ? body.detail : 'Server error')
       }
-      setResult(await response.json())
-      // Remember which files these results belong to, so the chat asks about the same ones.
+      setResult(body)
       setAnalysed((previous) => ({ id: previous.id + 1, files }))
-    } catch {
-      setError('The documents could not be analysed. Check that the server is running, then try again.')
+        } catch (err) {
+      setError(err.message === 'Server error' || err.message === 'Failed to fetch'
+        ? 'The documents could not be analysed. Check that the server is running, then try again.'
+        : err.message)
     } finally {
       setLoading(false)
     }

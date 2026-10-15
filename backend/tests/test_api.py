@@ -80,3 +80,11 @@ def test_bad_file_does_not_block_good_file():
 
     assert body["documents"][0]["status"] == "error"
     assert body["documents"][1]["status"] == "ok"
+
+def test_too_many_files_is_rejected(): 
+    pdf = make_pdf("A normal report")
+    files = [("files", (f"report{i}.pdf", pdf, "application/pdf")) for i in range(11)]
+    response = client.post("/api/analyze", files = files)
+
+    assert response.status_code == 400
+    assert "at most 10" in response.json()["detail"]

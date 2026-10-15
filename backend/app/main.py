@@ -7,6 +7,8 @@ from app.llm import analyse_document, answer_question, consolidate
 from app.safety import find_injection
 import json
 
+MAX_FILES = 10 
+
 app = FastAPI(
     title="Multi-Doc Insight Engine",
     description="Analyses uploaded PDFs and returns key details and a consolidated summary.",
@@ -22,6 +24,11 @@ def health() -> dict:
 @app.post("/api/analyze")
 async def analyze(files: list[UploadFile] = File(...)) -> dict:
     """Accept one or more PDFs and return key details for each."""
+    if len(files)> MAX_FILES: 
+        raise HTTPException(
+            status_code= 400, 
+            detail = f"Too many files. Upload at most {MAX_FILES} at a time.",
+        )
     results = []
     for file in files:
         content = await file.read()
@@ -81,6 +88,11 @@ async def ask(
     files: list[UploadFile] = File(...),
 ) -> dict:
     """Answer a question using only the uploaded PDFs."""
+    if len(files)> MAX_FILES: 
+        raise HTTPException(
+            status_code= 400, 
+            detail = f"Too many files. Upload at most {MAX_FILES} at a time.",
+        )
     question = question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Please type a question.")
